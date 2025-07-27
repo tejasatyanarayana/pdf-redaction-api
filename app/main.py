@@ -8,8 +8,7 @@ import os
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # React dev server
-    allow_credentials=True,
+    allow_origins=["*"],  
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -25,7 +24,7 @@ async def redact_with_manual(request: RedactionRequest):
     input_path = f"uploads/{request.filename}"
     output_path = f"outputs/redacted_{request.filename}"
 
-    keywords = [k.strip() for k in request.keywords.split(",")] if request.keywords else []
+    keywords = [k+' ' for k in request.keywords.split(",")] if request.keywords else []
     pages = parse_page_range(request.page_range)
 
     redact_text(
@@ -70,24 +69,24 @@ async def upload_file(file: UploadFile = File(...)):
     return {"filename": file.filename, "message": "File uploaded!"}
 
 
-@app.post("/redact")
-async def redact_pdf(file: UploadFile = File(...), keywords: str = Form(...),
-                     page_range: str = Form(""),remove_graphics: str = Form("false")):
-    input_path = f"uploads/{file.filename}"
-    output_path = f"outputs/redacted_{file.filename}"
+# @app.post("/redact")
+# async def redact_pdf(file: UploadFile = File(...), keywords: str = Form(...),
+#                      page_range: str = Form(""),remove_graphics: str = Form("false")):
+#     input_path = f"uploads/{file.filename}"
+#     output_path = f"outputs/redacted_{file.filename}"
     
 
-    contents = await file.read()
-    with open(input_path, "wb") as f:
-        f.write(contents)
-    keyword_list = [k.strip() for k in keywords.split(",") if k.strip()]
-    final_keyword_list = keyword_list + [k.upper() for k in keyword_list] + [k.casefold() for k in keyword_list] + [k.capitalize() for k in keyword_list]
-    final_keyword_list=list(set(final_keyword_list))
-    page_numbers = parse_page_range(page_range)
-    remove_images = remove_graphics.lower() == "true"
+#     contents = await file.read()
+#     with open(input_path, "wb") as f:
+#         f.write(contents)
+#     keyword_list = [k.strip() for k in keywords.split(",") if k.strip()]
+#     final_keyword_list = keyword_list + [k.upper() for k in keyword_list] + [k.casefold() for k in keyword_list] + [k.capitalize() for k in keyword_list]
+#     final_keyword_list=list(set(final_keyword_list))
+#     page_numbers = parse_page_range(page_range)
+#     remove_images = remove_graphics.lower() == "true"
     
-    redact_text(input_path, output_path, keywords=final_keyword_list,pages=page_numbers,remove_images=remove_images)
-    return {"message": "Redacted successfully", "output_file": output_path, "keywords_used": final_keyword_list,"images_removed": remove_images}
+#     redact_text(input_path, output_path, keywords=final_keyword_list,pages=page_numbers,remove_images=remove_images)
+#     return {"message": "Redacted successfully", "output_file": output_path, "keywords_used": final_keyword_list,"images_removed": remove_images}
 
 
 @app.get("/download/{filename}")
