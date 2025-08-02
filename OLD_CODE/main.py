@@ -1,6 +1,6 @@
 from fastapi import FastAPI, UploadFile, File,Form
 from fastapi.responses import HTMLResponse, FileResponse
-from app.redactor import redact_text
+from OLD_CODE.redactor import redact_text
 from pydantic import BaseModel
 from typing import Optional
 from fastapi.middleware.cors import CORSMiddleware
@@ -23,7 +23,6 @@ class RedactionRequest(BaseModel):
 async def redact_with_manual(request: RedactionRequest):
     input_path = f"uploads/{request.filename}"
     output_path = f"outputs/redacted_{request.filename}"
-
     keywords = [k+' ' for k in request.keywords.split(",")] if request.keywords else []
     pages = parse_page_range(request.page_range)
 
@@ -41,6 +40,41 @@ async def redact_with_manual(request: RedactionRequest):
         "redacted_file": output_path,
         "boxes": request.manual_boxes
     }
+    
+    
+@app.post("/upload")
+async def upload_file(file: UploadFile = File(...)):
+    contents = await file.read()
+    with open(f"uploads/{file.filename}", "wb") as f:
+        f.write(contents)
+    return {"filename": file.filename, "message": "File uploaded!"}    
+
+@app.get("/download/{filename}")
+async def download_file(filename: str):
+    file_path = f"outputs/redacted_{filename}"
+    if os.path.exists(file_path):
+        return FileResponse(
+            path=file_path,
+            filename=f"redacted_{filename}",
+            media_type='application/pdf'
+        )
+    return {"error": "File not found"}
+
+def parse_page_range(range_str: str) -> list[int]:
+    if not range_str:
+        return [] 
+    
+    pages = set()
+    for part in range_str.split(','):
+        if '-' in part:
+            start, end = part.split('-')
+            pages.update(range(int(start)-1, int(end)))  # 0-indexed
+        else:
+            pages.add(int(part)-1)
+    print(pages)
+    return sorted(pages)
+
+
 
 # @app.get("/", response_class=HTMLResponse)
 # def root():
@@ -61,12 +95,7 @@ async def redact_with_manual(request: RedactionRequest):
 #     </form>
 #     """
 
-@app.post("/upload")
-async def upload_file(file: UploadFile = File(...)):
-    contents = await file.read()
-    with open(f"uploads/{file.filename}", "wb") as f:
-        f.write(contents)
-    return {"filename": file.filename, "message": "File uploaded!"}
+
 
 
 # @app.post("/redact")
@@ -89,30 +118,7 @@ async def upload_file(file: UploadFile = File(...)):
 #     return {"message": "Redacted successfully", "output_file": output_path, "keywords_used": final_keyword_list,"images_removed": remove_images}
 
 
-@app.get("/download/{filename}")
-async def download_file(filename: str):
-    file_path = f"outputs/redacted_{filename}"
-    if os.path.exists(file_path):
-        return FileResponse(
-            path=file_path,
-            filename=f"redacted_{filename}",
-            media_type='application/pdf'
-        )
-    return {"error": "File not found"}
 
-def parse_page_range(range_str: str) -> list[int]:
-    if not range_str:
-        return []  # Means all pages
-    
-    pages = set()
-    for part in range_str.split(','):
-        if '-' in part:
-            start, end = part.split('-')
-            pages.update(range(int(start)-1, int(end)))  # 0-indexed
-        else:
-            pages.add(int(part)-1)
-    print(pages)
-    return sorted(pages)
 
 
 

@@ -7,7 +7,7 @@ def redact_text(input_path: str, output_path: str, keywords: list[str],
     doc = fitz.open(input_path)
     for i, page in enumerate(doc):
         if pages and i not in pages:
-            continue 
+            continue
 
         for keyword in keywords:
             text_instances = page.search_for(keyword)

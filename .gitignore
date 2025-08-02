@@ -1,1 +1,23 @@
 /venv
+
+# macOS system files
+.DS_Store
+
+# Python cache
+__pycache__/
+*.pyc
+
+# VSCode settings
+.vscode/
+
+# Upload/output files
+uploads/
+outputs/
+
+# Docker-related
+*.log
+*.pid
+*.sock
+
+# Ignore temporary Dockerfile (if duplicate)
+dockerfile
