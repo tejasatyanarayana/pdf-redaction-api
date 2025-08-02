@@ -1,6 +1,6 @@
 import fitz 
 import os
-
+#OLD_CODE
 def redact_text(input_path: str, output_path: str, keywords: list[str],
                 pages: list[int] = None, placeholder: str = "[---REDACTED---],",
                 remove_images: bool = False, manual_boxes: list[dict] = None ):
